@@ -2,7 +2,8 @@ import sys
 
 import cv2
 import numpy as np
-from util import clean_mask, calculate_smart_hsv_bounds, merge_nearby_boxes
+
+from util import calculate_smart_hsv_bounds, clean_mask, merge_nearby_boxes
 
 # --- Global Variables & App State ---
 auto_mode = True            # Continuous sampling inside Target Box
@@ -24,7 +25,7 @@ def pick_color_event(event, x, y, flags, param):
     Mouse callback: Clicking anywhere on the video frame moves the Target Box to (x, y),
     samples a 9x9 patch around (x, y), calculates smart HSV bounds, and locks onto the object.
     """
-    global target_center, current_hsv_frame, active_color_name, auto_mode, color_locked
+    global target_center, active_color_name, auto_mode, color_locked
 
     if event == cv2.EVENT_LBUTTONDOWN and current_hsv_frame is not None:
         h_img, w_img, _ = current_hsv_frame.shape

@@ -131,7 +131,7 @@ def circular_hue_median(hues):
     mean_h = (mean * 180.0 / (2 * np.pi)) % 180.0
     # Signed distance of each hue from the circular mean, in [-90, 90)
     offsets = (hues - mean_h + 90.0) % 180.0 - 90.0
-    return int(round(mean_h + np.median(offsets))) % 180
+    return round(float(mean_h + np.median(offsets))) % 180
 
 
 def calculate_smart_hsv_bounds(hsv_patch):

@@ -83,7 +83,7 @@ def test_real_red_pixels_from_bgr():
     bgr[::2, :] = (40, 10, 220)  # slightly magenta-red -> hue near 176
     hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV).reshape(-1, 3)
     h_min, h_max, *_ = calculate_smart_hsv_bounds(hsv)
-    for h in set(int(v) for v in hsv[:, 0]):
+    for h in {int(v) for v in hsv[:, 0]}:
         assert hue_in_range(h, h_min, h_max)
 
 
