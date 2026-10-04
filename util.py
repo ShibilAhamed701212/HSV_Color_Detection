@@ -120,6 +120,24 @@ def merge_nearby_boxes(boxes, max_gap=40):
     return [(r[0], r[1], r[2] - r[0], r[3] - r[1]) for r in rects]
 
 
+def build_hsv_mask(hsv_frame, h_min, h_max, s_min, s_max, v_min, v_max):
+    """
+    Binary mask of pixels inside the HSV bounds. When h_min > h_max the hue range
+    wraps through 0 (e.g. red 170-10), so two ranges are OR-ed together.
+    """
+    if h_min <= h_max:
+        lower = np.array([h_min, s_min, v_min], dtype=np.uint8)
+        upper = np.array([h_max, s_max, v_max], dtype=np.uint8)
+        return cv2.inRange(hsv_frame, lower, upper)
+    lower1 = np.array([h_min, s_min, v_min], dtype=np.uint8)
+    upper1 = np.array([179, s_max, v_max], dtype=np.uint8)
+    lower2 = np.array([0, s_min, v_min], dtype=np.uint8)
+    upper2 = np.array([h_max, s_max, v_max], dtype=np.uint8)
+    mask1 = cv2.inRange(hsv_frame, lower1, upper1)
+    mask2 = cv2.inRange(hsv_frame, lower2, upper2)
+    return cv2.bitwise_or(mask1, mask2)
+
+
 def circular_hue_median(hues):
     """
     Median of OpenCV hue values (0-179) treating hue as a circle, so a red patch

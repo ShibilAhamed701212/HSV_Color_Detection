@@ -66,7 +66,7 @@ Choosing a preset or clicking switches auto sampling off and locks the color. Dr
 ```text
 HSV_Color_Detection/
 ├── main.py                    # App: camera loop, mouse/keyboard handling, masks, HUD
-├── util.py                    # HSV bound calculation, circular hue median, mask cleaning, box merging
+├── util.py                    # HSV bounds, circular hue median, (wrap-aware) mask building and cleaning, box merging
 ├── tests/test_util.py         # pytest suite for util.py
 ├── scripts/synthetic_demo.py  # Runs main.py on a synthetic scene and saves screenshots
 ├── docs/screenshots/          # Screenshots produced by the script above
@@ -120,7 +120,7 @@ There is no configuration file or environment variable; everything is controlled
 
 ## 🧪 Testing
 
-The unit tests cover `util.py` (bound calculation including red wraparound, box merging, mask cleaning and the legacy helpers). They need no camera or display, so the headless OpenCV build is enough:
+The unit tests cover `util.py` (bound calculation and the dual-range mask including red wraparound, box merging, mask cleaning and the legacy helpers). They need no camera or display, so the headless OpenCV build is enough:
 
 ```bash
 pip install opencv-python-headless "numpy>=1.23.0" -r requirements-dev.txt

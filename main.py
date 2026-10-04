@@ -3,7 +3,12 @@ import sys
 import cv2
 import numpy as np
 
-from util import calculate_smart_hsv_bounds, clean_mask, merge_nearby_boxes
+from util import (
+    build_hsv_mask,
+    calculate_smart_hsv_bounds,
+    clean_mask,
+    merge_nearby_boxes,
+)
 
 # --- Global Variables & App State ---
 auto_mode = True            # Continuous sampling inside Target Box
@@ -171,18 +176,7 @@ while True:
     min_area = max(50, cv2.getTrackbarPos("Min Area", "Control Panel"))
 
     # 5. Generate binary mask
-    if h_min <= h_max:
-        lower_bound = np.array([h_min, s_min, v_min], dtype=np.uint8)
-        upper_bound = np.array([h_max, s_max, v_max], dtype=np.uint8)
-        mask = cv2.inRange(hsv_frame, lower_bound, upper_bound)
-    else:
-        lower1 = np.array([h_min, s_min, v_min], dtype=np.uint8)
-        upper1 = np.array([179, s_max, v_max], dtype=np.uint8)
-        lower2 = np.array([0, s_min, v_min], dtype=np.uint8)
-        upper2 = np.array([h_max, s_max, v_max], dtype=np.uint8)
-        mask1 = cv2.inRange(hsv_frame, lower1, upper1)
-        mask2 = cv2.inRange(hsv_frame, lower2, upper2)
-        mask = cv2.bitwise_or(mask1, mask2)
+    mask = build_hsv_mask(hsv_frame, h_min, h_max, s_min, s_max, v_min, v_max)
 
     # Optional Skin Suppress Filter
     if skin_filter_enabled:

@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 
 from util import (
+    build_hsv_mask,
     calculate_smart_hsv_bounds,
     circular_hue_median,
     clean_mask,
@@ -12,11 +13,10 @@ from util import (
 )
 
 
-def hue_in_range(h, h_min, h_max):
-    """Mirror of main.py's mask logic: h_min > h_max means the range wraps through 0."""
-    if h_min <= h_max:
-        return h_min <= h <= h_max
-    return h >= h_min or h <= h_max
+def hue_in_range(h, h_min, h_max, s=200, v=200):
+    """Run one HSV pixel through the production mask (build_hsv_mask, used by main.py)."""
+    pixel = np.array([[[h, s, v]]], dtype=np.uint8)
+    return bool(build_hsv_mask(pixel, h_min, h_max, 0, 255, 0, 255)[0, 0])
 
 
 def patch(*pixels_with_counts):
@@ -99,6 +99,43 @@ def test_neutral_objects_use_full_hue_range(pixel, prefix):
     h_min, h_max, *_ , label = calculate_smart_hsv_bounds(patch((pixel, 25)))
     assert label.startswith(prefix)
     assert (h_min, h_max) == (0, 179)
+
+
+# --- build_hsv_mask ----------------------------------------------------------
+
+
+def test_build_hsv_mask_plain_range():
+    hsv = np.array([[[50, 200, 200], [60, 200, 200], [70, 200, 200]]], dtype=np.uint8)
+    mask = build_hsv_mask(hsv, 55, 65, 100, 255, 100, 255)
+    assert mask[0].tolist() == [0, 255, 0]
+
+
+def test_build_hsv_mask_wraps_through_zero():
+    hues = [0, 5, 10, 11, 90, 169, 170, 179]
+    hsv = np.array([[[h, 200, 200] for h in hues]], dtype=np.uint8)
+    mask = build_hsv_mask(hsv, 170, 10, 100, 255, 100, 255)
+    assert mask[0].tolist() == [255, 255, 255, 0, 0, 0, 255, 255]
+
+
+def test_build_hsv_mask_applies_sat_and_val_in_both_wrap_ranges():
+    hsv = np.array(
+        [[[175, 50, 200], [5, 50, 200], [175, 200, 50], [5, 200, 50], [5, 200, 200]]],
+        dtype=np.uint8,
+    )
+    mask = build_hsv_mask(hsv, 170, 10, 100, 255, 100, 255)
+    assert mask[0].tolist() == [0, 0, 0, 0, 255]
+
+
+def test_sampled_red_bounds_mask_red_image_not_cyan():
+    # End to end: sample a red patch split across the wrap, mask a real HSV image.
+    red = patch(([2, 200, 200], 1250), ([177, 200, 200], 1250))
+    h_min, h_max, s_min, s_max, v_min, v_max, _ = calculate_smart_hsv_bounds(red)
+    image = np.array(
+        [[[2, 200, 200], [177, 200, 200], [90, 200, 200], [60, 200, 200]]],
+        dtype=np.uint8,
+    )
+    mask = build_hsv_mask(image, h_min, h_max, s_min, s_max, v_min, v_max)
+    assert mask[0].tolist() == [255, 255, 0, 0]
 
 
 # --- merge_nearby_boxes ------------------------------------------------------
