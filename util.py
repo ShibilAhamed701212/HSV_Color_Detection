@@ -120,6 +120,19 @@ def merge_nearby_boxes(boxes, max_gap=40):
     return [(r[0], r[1], r[2] - r[0], r[3] - r[1]) for r in rects]
 
 
+def circular_hue_median(hues):
+    """
+    Median of OpenCV hue values (0-179) treating hue as a circle, so a red patch
+    with pixels at both 2 and 177 yields a red hue instead of ~89 (cyan).
+    """
+    hues = np.asarray(hues, dtype=np.float64)
+    angles = hues * (2 * np.pi / 180.0)
+    mean = np.arctan2(np.mean(np.sin(angles)), np.mean(np.cos(angles)))
+    mean_h = (mean * 180.0 / (2 * np.pi)) % 180.0
+    # Signed distance of each hue from the circular mean, in [-90, 90)
+    offsets = (hues - mean_h + 90.0) % 180.0 - 90.0
+    return int(round(mean_h + np.median(offsets))) % 180
+
 
 def calculate_smart_hsv_bounds(hsv_patch):
     """
@@ -162,8 +175,12 @@ def calculate_smart_hsv_bounds(hsv_patch):
 
     # Case 4: Vibrant / Saturated Color Object (Red, Green, Blue, Yellow, Orange, etc.)
     else:
-        h_min = max(0, median_h - 12)
-        h_max = min(179, median_h + 12)
+        # Hue is circular (0 and 179 are neighbours), so use a circular median and
+        # let the range wrap. h_min > h_max means "wraps through 0"; main.py builds
+        # a dual-range mask for that case.
+        median_h = circular_hue_median(hsv_patch[:, 0])
+        h_min = (median_h - 12) % 180
+        h_max = (median_h + 12) % 180
         s_min = max(40, median_s - 50)
         s_max = min(255, median_s + 60)
         v_min = max(40, median_v - 50)

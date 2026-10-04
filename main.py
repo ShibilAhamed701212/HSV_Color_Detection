@@ -1,3 +1,5 @@
+import sys
+
 import cv2
 import numpy as np
 from util import clean_mask, calculate_smart_hsv_bounds, merge_nearby_boxes
@@ -10,6 +12,7 @@ largest_only = False        # Track only largest matching object
 merge_boxes_enabled = True  # Merge nearby split detections (e.g. face cut by glasses) into 1 box
 target_center = None        # (x, y) center of Target Box (defaults to frame center)
 active_color_name = "Auto Sampling (Place Object inside Target Box)"
+current_hsv_frame = None    # Latest HSV frame, read by the mouse callback
 
 
 def nothing(x):
@@ -98,7 +101,7 @@ if not cap.isOpened():
 
 if not cap.isOpened():
     print("Error: Could not open camera. Please check your camera connection.")
-    exit(1)
+    sys.exit(1)
 
 cv2.namedWindow("HSV Color Detection")
 cv2.setMouseCallback("HSV Color Detection", pick_color_event)  # type: ignore
@@ -266,7 +269,8 @@ while True:
         break
     elif key == ord(" "):
         color_locked = not color_locked
-        print(f"--> Color Lock: {'LOCKED' if color_locked else 'UNLOCKED (Auto Sampling)'}")
+        unlocked_str = "UNLOCKED (Auto Sampling)" if auto_mode else "UNLOCKED (Manual)"
+        print(f"--> Color Lock: {'LOCKED' if color_locked else unlocked_str}")
     elif key == ord("a"):
         auto_mode = not auto_mode
         color_locked = False
