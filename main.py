@@ -25,6 +25,14 @@ def nothing(x):
     pass
 
 
+def window_closed(name):
+    """True once the user has closed the window (its X button) or it no longer exists."""
+    try:
+        return cv2.getWindowProperty(name, cv2.WND_PROP_VISIBLE) < 1
+    except cv2.error:
+        return True
+
+
 def pick_color_event(event, x, y, flags, param):
     """
     Mouse callback: Clicking anywhere on the video frame moves the Target Box to (x, y),
@@ -259,6 +267,9 @@ while True:
     cv2.imshow("Binary Mask", mask)
 
     key = cv2.waitKey(1) & 0xFF
+    if window_closed("HSV Color Detection"):
+        print("Detection window closed. Quitting application...")
+        break
     if key == ord("q"):
         print("Quitting application...")
         break

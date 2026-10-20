@@ -55,7 +55,7 @@ The screenshots below are genuine output of `main.py`, but the input is a **synt
 | **`m`** | Toggle box merging |
 | **`1`–`6`** | Presets: `1` Red, `2` Green, `3` Blue, `4` Yellow, `5` Orange, `6` Purple |
 | **`7` / `8`** | Presets: `7` White, `8` Black |
-| **`q`** | Quit |
+| **`q`** or closing the detection window | Quit |
 
 Choosing a preset or clicking switches auto sampling off and locks the color. Dragging the trackbars works when the color is locked or auto mode is off; in auto mode they are overwritten every frame.
 
