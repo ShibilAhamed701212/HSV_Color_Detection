@@ -19,10 +19,19 @@ merge_boxes_enabled = True  # Merge nearby split detections (e.g. face cut by gl
 target_center = None        # (x, y) center of Target Box (defaults to frame center)
 active_color_name = "Auto Sampling (Place Object inside Target Box)"
 current_hsv_frame = None    # Latest HSV frame, read by the mouse callback
+detection_window_seen = False  # Backend has reported the window visible
 
 
 def nothing(x):
     pass
+
+
+def window_visible(name):
+    """True if the window reports itself visible; False if hidden, gone or unsupported."""
+    try:
+        return cv2.getWindowProperty(name, cv2.WND_PROP_VISIBLE) >= 1
+    except cv2.error:
+        return False
 
 
 def pick_color_event(event, x, y, flags, param):
@@ -259,6 +268,13 @@ while True:
     cv2.imshow("Binary Mask", mask)
 
     key = cv2.waitKey(1) & 0xFF
+    # Only treat "not visible" as closed once the backend has reported the window
+    # visible at least once, so backends without WND_PROP_VISIBLE never quit early.
+    if window_visible("HSV Color Detection"):
+        detection_window_seen = True
+    elif detection_window_seen:
+        print("Detection window closed. Quitting application...")
+        break
     if key == ord("q"):
         print("Quitting application...")
         break
